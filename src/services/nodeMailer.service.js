@@ -20,7 +20,7 @@ async function createEmail() {
 
     El mismo tendrá una duración de 10 minutos, pasado este tiempo será inválido `,
   });
-x  console.log("Message sent: %s", info.messageId);
+  console.log("Message sent: %s", info.messageId);
   console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
 }
 
