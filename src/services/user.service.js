@@ -159,9 +159,9 @@ async function existsResetPasswordToken(resetPasswordToken) {
 }
 
 function serviceSetPassword(id, password) {
-    return User.findByIdAndUpdate(id, {$set: {password}}, {new: true})
-      .select("-password -registerToken -resetPasswordToken");
-  }
+    return User.findByIdAndUpdate(id, { $set: { password } }, { new: true })
+        .select("-password -registerToken -resetPasswordToken");
+}
 
 export {
     isActive,

@@ -1,29 +1,33 @@
 require("dotenv").config();
 import nodemailer from "nodemailer";
+import emailConstants from "../utils/emailConstants";
 
-async function createEmail() {
-  const transporter = nodemailer.createTransport({
-    host: process.env.HOST_NODE_MAILER,
-    port: 587,
+function createEmailConfiguration() {
+  return {
+    service: "gmail",
     auth: {
       user: process.env.USER_EMAIL,
       pass: process.env.PASSWORD_EMAIL
     }
-  });
+  };
+}
 
-  let info = await transporter.sendMail({
-    from: process.env.USER_EMAIL,
-    to: "bar@example.com",
-    subject: "Cambio de contraseña",
-    text: "Prueba para el cambio de contraseña",
-    html: `Token asociado para el cambio de contraseña:
+function createEmailBody(from, to, subject, html) {
+  return {
+    from: from,
+    to: `${to}`,
+    subject: subject,
+    html: html
+  };
+}
 
-    El mismo tendrá una duración de 10 minutos, pasado este tiempo será inválido `,
-  });
+async function serviceSendEmailToPasswordChange(email, token) {
+  const transporter = nodemailer.createTransport( createEmailConfiguration() );
+  let info = await transporter.sendMail( createEmailBody(process.env.USER_EMAIL, email, emailConstants.changePassword.es.subject, emailConstants.changePassword.es.html + ` ${token}`)  );
   console.log("Message sent: %s", info.messageId);
   console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
 }
 
 export {
-    createEmail
+  serviceSendEmailToPasswordChange
 }

@@ -12,7 +12,7 @@ import {
 } from "../services/user.service";
 import ResponseUtil from "../utils/response";
 import errors from "../utils/codeInternalErrors";
-import { createEmail } from "../services/nodeMailer.service";
+import { serviceSendEmailToPasswordChange } from "../services/nodeMailer.service";
 
 const logger = log4js.getLogger();
 logger.level = "debug";
@@ -22,7 +22,6 @@ async function login(req, res) {
     logger.info("[login] INIT");
     try {
 
-        await createEmail();
         const emailString = req.body.email;
         const unencryptedPasswordString = req.body.password;
         let user = await serviceGetUserByEmail(emailString.toLowerCase());
@@ -46,19 +45,26 @@ async function login(req, res) {
     logger.info("[login] FINISH");
 }
 
-async function verify(req, res) {
+async function sendEmailToChangePassword(req, resp) {
     console.log("\n");
-    logger.info("[verify] INIT");
+    logger.info("[sendEmailToChangePassword] INIT");
     try {
 
-        const response = jwt.verify(req.body.verify, secrets.jwtSecret);
-        ResponseUtil.success(res, response);
+        const EMAIL = req.body.email;
+        let user = await serviceGetUserByEmail(EMAIL);
+        user.resetPasswordToken = jwt.sign({id: user._id}, secrets.jwtResetPasswordSecret, {expiresIn: "10m"});
+        const TOKEN = user.resetPasswordToken;
+        await user.save();
+        await serviceSendEmailToPasswordChange(EMAIL, TOKEN);
+        ResponseUtil.success(resp, "success");
 
     } catch (error) {
-        logger.error("[verify] ERROR", error);
+
+        logger.error("[sendEmailToChangePassword] ERROR", error);
         ResponseUtil.badRequest(res, errors.DATA_NOT_FOUND, error.message);
+
     }
-    logger.info("[verify] FINISH");
+    logger.info("[sendEmailToChangePassword] FINISH");
 }
 
 async function resetPassword(req, res) {
@@ -83,7 +89,7 @@ async function resetPassword(req, res) {
 
     } catch (error) {
 
-        logger.error("[createUser] ERROR", error);
+        logger.error("[resetPassword] ERROR", error);
         ResponseUtil.badRequest(res, errors.DATA_NOT_FOUND, error.message);
 
     }
@@ -92,6 +98,6 @@ async function resetPassword(req, res) {
 
 export {
     login,
-    verify,
-    resetPassword
+    resetPassword,
+    sendEmailToChangePassword
 };
